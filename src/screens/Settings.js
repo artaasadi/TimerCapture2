@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Dimensions,
+  Dimensions, Button,
 } from 'react-native';
 import {Actions} from 'react-native-router-flux';
 
@@ -20,7 +20,9 @@ export default function Settings() {
   return (
     <View>
       <Text> Settings </Text>
-      <Text onPress={() => Actions.pop()}>BACK</Text>
+      <View style={styles.addBtnImg}>
+        <Button title={'BACK'} onPress={() => Actions.pop()} />
+      </View>
     </View>
   );
 }

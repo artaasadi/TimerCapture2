@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  SafeAreaView,
   Dimensions,
+  Button,
 } from 'react-native';
 import {Actions} from 'react-native-router-flux';
-
+import {RNCamera} from 'react-native-camera';
 // getting size of screen
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -17,17 +19,28 @@ const windowHeight = Dimensions.get('window').height;
 export default function Capture() {
   // state
   return (
-    <View>
-      <Text> Capture </Text>
-      <Text onPress={() => Actions.pop()}>BACK</Text>
-    </View>
+    <SafeAreaView>
+      <Text> Capture 2 </Text>
+      <View style={styles.container}>
+        <RNCamera
+          style={{flex: 1, alignItems: 'center'}}
+          ref={ref => {
+            this.camera = ref;
+          }}
+        />
+      </View>
+      <View style={styles.addBtnImg}>
+        <Button title={'BACK'} onPress={() => Actions.pop()} />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E0E7EB',
+    flexDirection: 'column',
+    backgroundColor: 'black',
   },
   header: {
     flex: 0.2,
