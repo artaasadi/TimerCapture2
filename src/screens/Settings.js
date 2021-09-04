@@ -7,19 +7,29 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Dimensions, Button,
+  Dimensions,
+  Button,
 } from 'react-native';
 import {Actions} from 'react-native-router-flux';
-
+import {selectDirectory} from 'react-native-directory-picker';
+import RNFS from 'react-native-fs';
 // getting size of screen
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 export default function Settings() {
+  const select = () => {
+    selectDirectory().then(path => {
+      console.log(`The path is ${path}`);
+    });
+  };
   // state
   return (
     <View>
       <Text> Settings </Text>
+      <View style={styles.addBtnImg}>
+        <Button title={'select'} onPress={() => select()} />
+      </View>
       <View style={styles.addBtnImg}>
         <Button title={'BACK'} onPress={() => Actions.pop()} />
       </View>

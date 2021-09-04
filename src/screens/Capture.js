@@ -12,27 +12,41 @@ import {
 } from 'react-native';
 import {Actions} from 'react-native-router-flux';
 import {RNCamera} from 'react-native-camera';
+import {useCamera} from 'react-native-camera-hooks';
+import RNFS from 'react-native-fs';
+
 // getting size of screen
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 export default function Capture() {
+  const [{cameraRef}, {takePicture}] = useCamera(null);
+  const captureHandler = async () => {
+    try {
+      const data = await takePicture();
+      const date = new Date();
+      const nowStr = date.getDay();
+      const newFilePath =
+        RNFS.ExternalDirectoryPath + '/' + nowStr + 'testFile.png';
+
+      RNFS.moveFile(data.uri, newFilePath);
+      console.log(newFilePath);
+    } catch (e) {
+      console.log(e);
+    }
+  };
   // state
   return (
-    <SafeAreaView>
-      <Text> Capture 2 </Text>
-      <View style={styles.container}>
-        <RNCamera
-          style={{flex: 1, alignItems: 'center'}}
-          ref={ref => {
-            this.camera = ref;
-          }}
-        />
-      </View>
-      <View style={styles.addBtnImg}>
-        <Button title={'BACK'} onPress={() => Actions.pop()} />
-      </View>
-    </SafeAreaView>
+    <View style={styles.container}>
+      <RNCamera
+        style={styles.preview}
+        ref={cameraRef}
+        type={RNCamera.Constants.Type.front}>
+        <View style={styles.addBtnImg}>
+          <Button title={'capture'} onPress={() => captureHandler()} />
+        </View>
+      </RNCamera>
+    </View>
   );
 }
 
@@ -41,6 +55,11 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     backgroundColor: 'black',
+  },
+  preview: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   header: {
     flex: 0.2,

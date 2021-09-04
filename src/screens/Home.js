@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Dimensions,
+  Dimensions, Button,
 } from 'react-native';
 import {Router, Scene} from 'react-native-router-flux';
 import Settings from './Settings';
@@ -22,8 +22,12 @@ export default function Home() {
   // state
   return (
     <View>
-      <Text onPress={() => Actions.settings()}>SETTINGS</Text>
-      <Text onPress={() => Actions.capture()}>CAPTURE</Text>
+      <View style={styles.addBtnImg}>
+        <Button title={'SETTINGS'} onPress={() => Actions.settings()} />
+      </View>
+      <View style={styles.addBtnImg}>
+        <Button title={'CAPTURE'} onPress={() => Actions.capture()} />
+      </View>
     </View>
   );
 }
