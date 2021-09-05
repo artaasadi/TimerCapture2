@@ -11,21 +11,16 @@ import {
   Button,
 } from 'react-native';
 import {Actions} from 'react-native-router-flux';
-import {selectDirectory} from 'react-native-directory-picker';
 import RNFileFolderSelector from 'react-native-file-folder-selector';
-
 import RNFS from 'react-native-fs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // getting size of screen
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 export default function Settings() {
   const select = () => {
-    selectDirectory().then(path => {
-      console.log(`The path is ${path}`);
-    });
-  };
-  const select2 = () => {
     RNFileFolderSelector.Show({
       title: 'Select File',
       chooseFolderMode: true,
@@ -42,7 +37,7 @@ export default function Settings() {
     <View>
       <Text> Settings </Text>
       <View style={styles.addBtnImg}>
-        <Button title={'select'} onPress={() => select2()} />
+        <Button title={'select'} onPress={() => select()} />
       </View>
       <View style={styles.addBtnImg}>
         <Button title={'BACK'} onPress={() => Actions.pop()} />
