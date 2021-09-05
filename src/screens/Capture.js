@@ -14,7 +14,7 @@ import {Actions} from 'react-native-router-flux';
 import {RNCamera} from 'react-native-camera';
 import {useCamera} from 'react-native-camera-hooks';
 import RNFS from 'react-native-fs';
-
+import {PermissionsAndroid} from 'react-native';
 // getting size of screen
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -25,12 +25,12 @@ export default function Capture() {
     try {
       const data = await takePicture();
       const date = new Date();
-      const nowStr = date.getDay();
+      const nowStr = date.getTime();
       const newFilePath =
-        RNFS.ExternalDirectoryPath + '/' + nowStr + 'testFile.png';
-
-      RNFS.moveFile(data.uri, newFilePath);
+        '/storage/emulated/0/Download' + '/' + nowStr + 'testFile.jpg';
+      console.log(data.uri);
       console.log(newFilePath);
+      await RNFS.moveFile(data.uri, newFilePath);
     } catch (e) {
       console.log(e);
     }
