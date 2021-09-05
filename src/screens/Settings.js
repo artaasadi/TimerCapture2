@@ -8,11 +8,12 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  Button,
+  Button, TextInput,
 } from 'react-native';
 import {Actions} from 'react-native-router-flux';
 import RNFileFolderSelector from 'react-native-file-folder-selector';
 import RNFS from 'react-native-fs';
+import { Input } from '@ui-kitten/components';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // getting size of screen
@@ -89,6 +90,11 @@ export default function Settings() {
       <View style={styles.addBtnImg}>
         <Button title={'select directory'} onPress={() => selectPath()} />
       </View>
+      <Input
+          placeholder='Place your Text'
+          value={timer}
+          onChangeText={nextValue => setTimer(nextValue)}
+      />
       <View style={styles.addBtnImg}>
         <Button title={'BACK'} onPress={() => Actions.pop()} />
       </View>
