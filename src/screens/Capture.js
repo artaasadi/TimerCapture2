@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,19 +15,76 @@ import {RNCamera} from 'react-native-camera';
 import {useCamera} from 'react-native-camera-hooks';
 import RNFS from 'react-native-fs';
 import {PermissionsAndroid} from 'react-native';
+import RNLocation from 'react-native-location';
+import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+RNLocation.configure({
+  distanceFilter: null,
+});
+
 // getting size of screen
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
 
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
 export default function Capture() {
+  const [timer, setTimer] = useState();
+  const [path, setPath] = useState()
+  useInterval(() => {
+    captureHandler()
+    console.log('capture');
+  }, timer * 1000);
+  useEffect(async () => {
+      try {
+        const data = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/settings.txt');
+        const jsonData = JSON.parse(data);
+        setPath(jsonData.path);
+        setTimer(jsonData.timer);
+      } catch (e) {
+        console.log(e);
+      }
+    }, []
+  )
   const [{cameraRef}, {takePicture}] = useCamera(null);
   const captureHandler = async () => {
     try {
       const data = await takePicture();
       const date = new Date();
-      const nowStr = date.getTime();
+      const nowStr =
+        date.getFullYear() +
+        '_' +
+        date.getMonth() +
+        '_' +
+        date.getDate() +
+        '__' +
+        date.getHours() +
+        '_' +
+        date.getMinutes() +
+        '_' +
+        date.getSeconds();
       const newFilePath =
-        '/storage/emulated/0/Download' + '/' + nowStr + 'testFile.jpg';
+        path +
+        '/' +
+        nowStr +
+        '.jpg';
       console.log(data.uri);
       console.log(newFilePath);
       await RNFS.moveFile(data.uri, newFilePath);
@@ -35,6 +92,23 @@ export default function Capture() {
       console.log(e);
     }
   };
+  const getLocHandler = async () => {
+    const permission = await RNLocation.checkPermission({
+      ios: 'whenInUse', // or 'always'
+      android: {
+        detail: 'coarse', // or 'fine'
+      },
+    });
+    console.log('permission' + permission);
+    console.log('Here 7');
+    const location = await RNLocation.getLatestLocation({timeout: 100});
+    const a = {
+      time: location.timestamp,
+    };
+    console.log(a);
+  };
+
+
   // state
   return (
     <View style={styles.container}>
@@ -43,7 +117,7 @@ export default function Capture() {
         ref={cameraRef}
         type={RNCamera.Constants.Type.front}>
         <View style={styles.addBtnImg}>
-          <Button title={'capture'} onPress={() => captureHandler()} />
+          <Button title={'getLoc'} onPress={() => getLocHandler()} />
         </View>
       </RNCamera>
     </View>

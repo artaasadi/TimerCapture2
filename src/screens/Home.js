@@ -21,7 +21,7 @@ const windowHeight = Dimensions.get('window').height;
 export default function Home() {
   // state
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.addBtnImg}>
         <Button title={'SETTINGS'} onPress={() => Actions.settings()} />
       </View>
@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E0E7EB',
+    alignItems: 'center',
   },
   header: {
     flex: 0.2,
