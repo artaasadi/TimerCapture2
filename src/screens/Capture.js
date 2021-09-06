@@ -14,7 +14,6 @@ import {Actions} from 'react-native-router-flux';
 import {RNCamera} from 'react-native-camera';
 import {useCamera} from 'react-native-camera-hooks';
 import RNFS from 'react-native-fs';
-import {PermissionsAndroid} from 'react-native';
 import RNLocation from 'react-native-location';
 import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -47,10 +46,9 @@ function useInterval(callback, delay) {
 }
 export default function Capture() {
   const [timer, setTimer] = useState();
-  const [path, setPath] = useState()
-  useInterval(() => {
-    captureHandler()
-    console.log('capture');
+  const [path, setPath] = useState();
+  useInterval(async () => {
+    await action()
   }, timer * 1000);
   useEffect(async () => {
       try {
@@ -61,8 +59,35 @@ export default function Capture() {
       } catch (e) {
         console.log(e);
       }
+      await RNFS.mkdir(path + '/data');
+      await RNFS.mkdir(path + '/data/pics');
     }, []
   )
+  const action = async () => {
+    const picLocation = await captureHandler()
+    const geo = await getGeoHandler();
+    let jsonData = {};
+    try {
+      const data = await RNFS.readFile(path + '/data/data.txt');
+      jsonData = JSON.parse(data);
+    } catch (e) {
+      console.log(e);
+    }
+    jsonData[geo.timestamp] = {
+      geo: geo,
+      picLocation: picLocation,
+    };
+    const jsonValue = JSON.stringify(jsonData);
+    RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
+        .then(success => {
+          console.log('FILE WRITTEN!');
+        })
+        .catch(err => {
+          console.log(err.message);
+        });
+    console.log(picLocation);
+    console.log(geo);
+  }
   const [{cameraRef}, {takePicture}] = useCamera(null);
   const captureHandler = async () => {
     try {
@@ -81,18 +106,16 @@ export default function Capture() {
         '_' +
         date.getSeconds();
       const newFilePath =
-        path +
-        '/' +
+        'pics/' +
         nowStr +
         '.jpg';
-      console.log(data.uri);
-      console.log(newFilePath);
-      await RNFS.moveFile(data.uri, newFilePath);
+      await RNFS.moveFile(data.uri, path + '/data/' + newFilePath);
+      return newFilePath;
     } catch (e) {
       console.log(e);
     }
   };
-  const getLocHandler = async () => {
+  const getGeoHandler = async () => {
     const permission = await RNLocation.checkPermission({
       ios: 'whenInUse', // or 'always'
       android: {
@@ -100,12 +123,8 @@ export default function Capture() {
       },
     });
     console.log('permission' + permission);
-    console.log('Here 7');
     const location = await RNLocation.getLatestLocation({timeout: 100});
-    const a = {
-      time: location.timestamp,
-    };
-    console.log(a);
+    return location;
   };
 
 
@@ -117,7 +136,7 @@ export default function Capture() {
         ref={cameraRef}
         type={RNCamera.Constants.Type.front}>
         <View style={styles.addBtnImg}>
-          <Button title={'getLoc'} onPress={() => getLocHandler()} />
+          <Button title={'getLoc'} onPress={() => action()} />
         </View>
       </RNCamera>
     </View>

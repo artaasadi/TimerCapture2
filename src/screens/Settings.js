@@ -71,9 +71,9 @@ export default function Settings() {
     });
   };
   const saveFile = value => {
-    const path = RNFS.ExternalDirectoryPath + '/settings.txt';
+    const settingPath = RNFS.ExternalDirectoryPath + '/settings.txt';
     const jsonValue = JSON.stringify(value);
-    RNFS.writeFile(path, jsonValue, 'utf8')
+    RNFS.writeFile(settingPath, jsonValue, 'utf8')
       .then(success => {
         console.log('FILE WRITTEN!');
       })
