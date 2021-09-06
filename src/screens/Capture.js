@@ -134,7 +134,7 @@ export default function Capture() {
       <RNCamera
         style={styles.preview}
         ref={cameraRef}
-        type={RNCamera.Constants.Type.front}>
+        type={RNCamera.Constants.Type.back}>
         <View style={styles.addBtnImg}>
           <Button title={'getLoc'} onPress={() => action()} />
         </View>
