@@ -192,9 +192,10 @@ dependencies {
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
     implementation "com.google.android.gms:play-services-base:16.0.1"
-
+    implementation "com.google.android.gms:play-services-basement:16.0.1"
+    // https://mvnrepository.com/artifact/com.google.android.gms/play-services-basement
+    implementation group: 'com.google.android.gms', name: 'play-services-basement', version: '16.0.1'
     implementation "com.google.android.gms:play-services-location:16.0.0"
-
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
       exclude group:'com.facebook.fbjni'
     }
