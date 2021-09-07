@@ -15,8 +15,10 @@ import {RNCamera} from 'react-native-camera';
 import {useCamera} from 'react-native-camera-hooks';
 import RNFS from 'react-native-fs';
 import RNLocation from 'react-native-location';
-import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faUndo } from '@fortawesome/free-solid-svg-icons'
+
+
 
 RNLocation.configure({
   distanceFilter: null,
@@ -51,6 +53,7 @@ export default function Capture() {
   const [path, setPath] = useState();
   const [counter, setCounter] = useState(null);
   const [state, setState] = useState(true);
+  const [cameraSide, setCameraSide] = useState(RNCamera.Constants.Type.back);
 
   useInterval(async () => {
     if (state){
@@ -97,7 +100,6 @@ export default function Capture() {
   )
 
   const action = async () => {
-    console.log(state);
     const picLocation = await captureHandler()
     const geo = await getGeoHandler();
     let jsonData = {};
@@ -168,29 +170,30 @@ export default function Capture() {
       setState(true);
     }
   }
-
+  const switchCameraSide = () => {
+    if (cameraSide == RNCamera.Constants.Type.back) {
+      setCameraSide(RNCamera.Constants.Type.front)
+    } else {
+      setCameraSide(RNCamera.Constants.Type.back)
+    }
+  }
   // state
   return (
     <View style={styles.container}>
       <RNCamera
         style={styles.preview}
         ref={cameraRef}
-        type={RNCamera.Constants.Type.back}
+        type={cameraSide}
         >
-        <Button title={'*'} onPress={() => {}} />
+        <View style={styles.addBtnImg}>
+          <Button title={'switch'} onPress={() => switchCameraSide()} />
+        </View>
+        <View style={styles.addBtnImg}>
+          <Button title={'capture'} onPress={() => action()} />
+        </View>
         <Text style={styles.text}>{counter}</Text>
         <View style={styles.addBtnImg}>
-          <Button title=
-                      {(() => {
-                        if (state)
-                        {
-                          return 'STOP'
-                        } else {
-                          return 'START'
-                        }
-                      }
-                      )()
-                      } onPress={() => stateSetter()} />
+          <Button title={(() => {if (state) {return 'STOP'} else {return 'START'}})()} onPress={() => stateSetter()} />
         </View>
       </RNCamera>
     </View>
@@ -223,8 +226,7 @@ const styles = StyleSheet.create({
   text: {
     paddingBottom: windowHeight * 0.02,
     fontSize: 18,
-    backgroundColor: '#222222',
-    color: '#ffffff',
+    color: '#222222',
     fontWeight: 'bold',
     fontFamily: 'GloriaHallelujah-Regular',
   },
