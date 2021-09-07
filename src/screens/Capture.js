@@ -180,9 +180,6 @@ export default function Capture() {
         <Button title={'*'} onPress={() => {}} />
         <Text style={styles.text}>{counter}</Text>
         <View style={styles.addBtnImg}>
-          <i className="fad fa-user-astronaut"></i>
-        </View>
-        <View style={styles.addBtnImg}>
           <Button title=
                       {(() => {
                         if (state)
