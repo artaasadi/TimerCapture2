@@ -34,6 +34,22 @@ export default function Settings() {
         }
       }, [timer, path]);
   useEffect(async () => {
+      const check = await RNFS.exists(RNFS.ExternalDirectoryPath + '/settings.txt');
+      if (!check) {
+        const value = {
+          path: RNFS.ExternalDirectoryPath,
+          timer: 20,
+        };
+        const settingPath = RNFS.ExternalDirectoryPath + '/settings.txt';
+        const jsonValue = JSON.stringify(value);
+        RNFS.writeFile(settingPath, jsonValue, 'utf8')
+            .then(success => {
+              console.log('FILE WRITTEN!');
+            })
+            .catch(err => {
+              console.log(err.message);
+            });
+      }
       console.log('setting');
       const jsonData = await getSetting()
       if ('path' in jsonData) {

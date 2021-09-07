@@ -49,8 +49,8 @@ function useInterval(callback, delay) {
 
 
 export default function Capture() {
-  const [timer, setTimer] = useState();
-  const [path, setPath] = useState();
+  const [timer, setTimer] = useState(null);
+  const [path, setPath] = useState(null);
   const [counter, setCounter] = useState(null);
   const [state, setState] = useState(true);
   const [cameraSide, setCameraSide] = useState(RNCamera.Constants.Type.back);
@@ -62,43 +62,67 @@ export default function Capture() {
   }, timer * 1000);
 
   useEffect(async () => {
-      try {
-        const data = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/settings.txt');
-        const jsonData = JSON.parse(data);
-        setPath(jsonData.path);
-        setTimer(jsonData.timer);
-      } catch (e) {
-        console.log(e);
-      }
+      await initSetting();
       console.log('path = ' + path)
-      try {
-        await RNFS.mkdir(path + '/data');
-        await RNFS.mkdir(path + '/data/pics');
-      } catch (e) {
-      }
-      let jsonData = {};
-      const checkForData = await RNFS.exists(path + '/data/data.txt');
-      if (checkForData) {
-        try {
-          const data = await RNFS.readFile(path + '/data/data.txt');
-          jsonData = JSON.parse(data);
-        } catch (e) {
-          console.log(e);
-        }
-      } else {
-        const jsonValue = JSON.stringify(jsonData);
-        RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
-            .then(success => {
-              console.log('FILE WRITTEN!');
-            })
-            .catch(err => {
-              console.log(err.message);
-            });
-      }
+      const jsonData = await init();
       setCounter(Object.keys(jsonData).length);
     }, []
   )
 
+  const initSetting = async () => {
+    const check = await RNFS.exists(RNFS.ExternalDirectoryPath + '/settings.txt');
+    if (!check) {
+      const value = {
+        path: RNFS.ExternalDirectoryPath,
+        timer: 20,
+      };
+      const settingPath = RNFS.ExternalDirectoryPath + '/settings.txt';
+      const jsonValue = JSON.stringify(value);
+      RNFS.writeFile(settingPath, jsonValue, 'utf8')
+          .then(success => {
+            console.log('FILE WRITTEN!');
+          })
+          .catch(err => {
+            console.log(err.message);
+          });
+    }
+    try {
+      const data = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/settings.txt');
+      const jsonData = JSON.parse(data);
+      setPath(jsonData['path']);
+      setTimer(jsonData['timer']);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  const init = async () => {
+    try {
+      await RNFS.mkdir(path + '/data');
+      await RNFS.mkdir(path + '/data/pics');
+    } catch (e) {
+
+    }
+    let jsonData = {};
+    const checkForData = await RNFS.exists(path + '/data/data.txt');
+    if (checkForData) {
+      try {
+        const data = await RNFS.readFile(path + '/data/data.txt');
+        jsonData = JSON.parse(data);
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      const jsonValue = JSON.stringify(jsonData);
+      RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
+          .then(success => {
+            console.log('FILE WRITTEN!');
+          })
+          .catch(err => {
+            console.log(err.message);
+          });
+    }
+    return jsonData;
+  }
   const action = async () => {
     const picLocation = await captureHandler()
     const geo = await getGeoHandler();
@@ -108,11 +132,15 @@ export default function Capture() {
       jsonData = JSON.parse(data);
     } catch (e) {
       console.log(e);
+      jsonData = await init();
     }
-    jsonData[Date.now()] = {
-      geo: geo,
-      picLocation: picLocation,
-    };
+    if (geo != null & picLocation != null) {
+      jsonData[Date.now()] = {
+        geo: geo,
+        picLocation: picLocation,
+      };
+    }
+
     setCounter(Object.keys(jsonData).length);
     const jsonValue = JSON.stringify(jsonData);
     RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
@@ -146,6 +174,9 @@ export default function Capture() {
         'pics/' +
         nowStr +
         '.jpg';
+      if (path == null) {
+        await initSetting();
+      }
       await RNFS.moveFile(data.uri, path + '/data/' + newFilePath);
       return newFilePath;
     } catch (e) {
@@ -189,7 +220,7 @@ export default function Capture() {
           <Button title={'switch'} onPress={() => switchCameraSide()} />
         </View>
         <View style={styles.addBtnImg}>
-          <Button title={'capture'} onPress={() => action()} />
+          <Button title={'capture'} onPress={async () => {await action()}} />
         </View>
         <Text style={styles.text}>{counter}</Text>
         <View style={styles.addBtnImg}>
