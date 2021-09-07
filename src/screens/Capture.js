@@ -44,12 +44,20 @@ function useInterval(callback, delay) {
     }
   }, [delay]);
 }
+
+
 export default function Capture() {
   const [timer, setTimer] = useState();
   const [path, setPath] = useState();
+  const [counter, setCounter] = useState(null);
+  const [state, setState] = useState(true);
+
   useInterval(async () => {
-    await action()
+    if (state){
+      await action();
+    }
   }, timer * 1000);
+
   useEffect(async () => {
       try {
         const data = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/settings.txt');
@@ -59,11 +67,37 @@ export default function Capture() {
       } catch (e) {
         console.log(e);
       }
-      await RNFS.mkdir(path + '/data');
-      await RNFS.mkdir(path + '/data/pics');
+      console.log('path = ' + path)
+      try {
+        await RNFS.mkdir(path + '/data');
+        await RNFS.mkdir(path + '/data/pics');
+      } catch (e) {
+      }
+      let jsonData = {};
+      const checkForData = await RNFS.exists(path + '/data/data.txt');
+      if (checkForData) {
+        try {
+          const data = await RNFS.readFile(path + '/data/data.txt');
+          jsonData = JSON.parse(data);
+        } catch (e) {
+          console.log(e);
+        }
+      } else {
+        const jsonValue = JSON.stringify(jsonData);
+        RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
+            .then(success => {
+              console.log('FILE WRITTEN!');
+            })
+            .catch(err => {
+              console.log(err.message);
+            });
+      }
+      setCounter(Object.keys(jsonData).length);
     }, []
   )
+
   const action = async () => {
+    console.log(state);
     const picLocation = await captureHandler()
     const geo = await getGeoHandler();
     let jsonData = {};
@@ -73,10 +107,11 @@ export default function Capture() {
     } catch (e) {
       console.log(e);
     }
-    jsonData[geo.timestamp] = {
+    jsonData[Date.now()] = {
       geo: geo,
       picLocation: picLocation,
     };
+    setCounter(Object.keys(jsonData).length);
     const jsonValue = JSON.stringify(jsonData);
     RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
         .then(success => {
@@ -88,7 +123,7 @@ export default function Capture() {
     console.log(picLocation);
     console.log(geo);
   }
-  const [{cameraRef}, {takePicture}] = useCamera(null);
+  const [{cameraRef}, {takePicture}] = useCamera();
   const captureHandler = async () => {
     try {
       const data = await takePicture();
@@ -126,7 +161,13 @@ export default function Capture() {
     const location = await RNLocation.getLatestLocation({timeout: 100});
     return location;
   };
-
+  const stateSetter = () => {
+    if (state) {
+      setState(false);
+    } else {
+      setState(true);
+    }
+  }
 
   // state
   return (
@@ -134,9 +175,25 @@ export default function Capture() {
       <RNCamera
         style={styles.preview}
         ref={cameraRef}
-        type={RNCamera.Constants.Type.back}>
+        type={RNCamera.Constants.Type.back}
+        >
+        <Button title={'*'} onPress={() => {}} />
+        <Text style={styles.text}>{counter}</Text>
         <View style={styles.addBtnImg}>
-          <Button title={'getLoc'} onPress={() => action()} />
+          <i className="fad fa-user-astronaut"></i>
+        </View>
+        <View style={styles.addBtnImg}>
+          <Button title=
+                      {(() => {
+                        if (state)
+                        {
+                          return 'STOP'
+                        } else {
+                          return 'START'
+                        }
+                      }
+                      )()
+                      } onPress={() => stateSetter()} />
         </View>
       </RNCamera>
     </View>
@@ -169,7 +226,7 @@ const styles = StyleSheet.create({
   text: {
     paddingBottom: windowHeight * 0.02,
     fontSize: 18,
-
+    backgroundColor: '#222222',
     color: '#ffffff',
     fontWeight: 'bold',
     fontFamily: 'GloriaHallelujah-Regular',

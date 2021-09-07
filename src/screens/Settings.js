@@ -34,15 +34,16 @@ export default function Settings() {
         }
       }, [timer, path]);
   useEffect(async () => {
-      console.log('initial');
+      console.log('setting');
       const jsonData = await getSetting()
       if ('path' in jsonData) {
-        setPath(jsonData.path);
+        setPath(jsonData['path']);
       } else {
         console.log(jsonData)
         setPath(RNFS.ExternalDirectoryPath);
       }
       if ('timer' in jsonData) {
+        console.log(jsonData['timer']);
         setTimer(jsonData.timer);
       } else {
         setTimer(10)
@@ -53,6 +54,8 @@ export default function Settings() {
     try {
       const data = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/settings.txt');
       const jsonData = JSON.parse(data);
+      console.log('here');
+      console.log(jsonData);
       return jsonData;
     } catch (e) {
       console.log(e);

@@ -13,12 +13,35 @@ import {Router, Scene} from 'react-native-router-flux';
 import Settings from './Settings';
 import Capture from './Capture';
 import {Actions} from 'react-native-router-flux';
+import RNFS from 'react-native-fs';
 
 // getting size of screen
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 export default function Home() {
+
+  useEffect(async () => {
+    console.log('initial');
+    const check = await RNFS.exists(RNFS.ExternalDirectoryPath + '/settings.txt');
+    if (!check) {
+      const value = {
+        path: RNFS.ExternalDirectoryPath,
+        timer: 20,
+      };
+      const settingPath = RNFS.ExternalDirectoryPath + '/settings.txt';
+      const jsonValue = JSON.stringify(value);
+      RNFS.writeFile(settingPath, jsonValue, 'utf8')
+          .then(success => {
+            console.log('FILE WRITTEN!');
+          })
+          .catch(err => {
+            console.log(err.message);
+          });
+    }
+
+  }, []);
+
   // state
   return (
     <View style={styles.container}>
