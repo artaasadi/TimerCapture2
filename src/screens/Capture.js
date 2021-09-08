@@ -13,7 +13,7 @@ import {
 import {Actions} from 'react-native-router-flux';
 import {RNCamera} from 'react-native-camera';
 import {useCamera} from 'react-native-camera-hooks';
-import RNFS from 'react-native-fs';
+import RNFS, {write} from 'react-native-fs';
 import RNLocation from 'react-native-location';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
@@ -69,38 +69,50 @@ export default function Capture() {
     }, []
   )
 
+  const writeLog = async (error) => {
+    const logExists = await RNFS.exists(RNFS.ExternalDirectoryPath + '/log.txt');
+    let log = '';
+    if (logExists) {
+      log = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/log.txt');
+    } else {
+      log = '';
+    }
+    RNFS.writeFile(RNFS.ExternalDirectoryPath + '/log.txt', log + '\n\n\n' + error, 'utf8').then( success =>
+        {console.log(success)}
+    ).catch(err => {console.log(error)})
+  }
   const initSetting = async () => {
-    const check = await RNFS.exists(RNFS.ExternalDirectoryPath + '/settings.txt');
-    if (!check) {
-      const value = {
-        path: RNFS.ExternalDirectoryPath,
-        timer: 20,
-      };
+      const check = await RNFS.exists(RNFS.ExternalDirectoryPath + '/settings.txt');
+      if (!check) {
+        const value = {
+          path: RNFS.ExternalDirectoryPath,
+          timer: 20,
+        };
       const settingPath = RNFS.ExternalDirectoryPath + '/settings.txt';
       const jsonValue = JSON.stringify(value);
-      RNFS.writeFile(settingPath, jsonValue, 'utf8')
+      await RNFS.writeFile(settingPath, jsonValue, 'utf8')
           .then(success => {
             console.log('FILE WRITTEN!');
           })
           .catch(err => {
-            console.log(err.message);
+            writeLog(err.message);
           });
-    }
-    try {
-      const data = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/settings.txt');
-      const jsonData = JSON.parse(data);
-      setPath(jsonData['path']);
-      setTimer(jsonData['timer']);
-    } catch (e) {
-      console.log(e);
-    }
+      }
+      try {
+        const data = await RNFS.readFile(RNFS.ExternalDirectoryPath + '/settings.txt');
+        const jsonData = JSON.parse(data);
+        setPath(jsonData['path']);
+        setTimer(jsonData['timer']);
+      } catch (e) {
+        writeLog(e.message);
+      }
   }
   const init = async () => {
     try {
       await RNFS.mkdir(path + '/data');
       await RNFS.mkdir(path + '/data/pics');
     } catch (e) {
-
+      writeLog(e.message);
     }
     let jsonData = {};
     const checkForData = await RNFS.exists(path + '/data/data.txt');
@@ -109,7 +121,7 @@ export default function Capture() {
         const data = await RNFS.readFile(path + '/data/data.txt');
         jsonData = JSON.parse(data);
       } catch (e) {
-        console.log(e);
+        writeLog(e.message);
       }
     } else {
       const jsonValue = JSON.stringify(jsonData);
@@ -118,7 +130,7 @@ export default function Capture() {
             console.log('FILE WRITTEN!');
           })
           .catch(err => {
-            console.log(err.message);
+            writeLog(err.message);
           });
     }
     return jsonData;
@@ -131,7 +143,7 @@ export default function Capture() {
       const data = await RNFS.readFile(path + '/data/data.txt');
       jsonData = JSON.parse(data);
     } catch (e) {
-      console.log(e);
+      writeLog(e.message)
       jsonData = await init();
     }
     if (geo != null & picLocation != null) {
@@ -143,7 +155,7 @@ export default function Capture() {
 
     setCounter(Object.keys(jsonData).length);
     const jsonValue = JSON.stringify(jsonData);
-    RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
+    await RNFS.writeFile(path + '/data/data.txt', jsonValue, 'utf8')
         .then(success => {
           console.log('FILE WRITTEN!');
         })
@@ -180,7 +192,7 @@ export default function Capture() {
       await RNFS.moveFile(data.uri, path + '/data/' + newFilePath);
       return newFilePath;
     } catch (e) {
-      console.log(e);
+      writeLog(e.message);
     }
   };
   const getGeoHandler = async () => {
@@ -190,7 +202,6 @@ export default function Capture() {
         detail: 'coarse', // or 'fine'
       },
     });
-    console.log('permission' + permission);
     const location = await RNLocation.getLatestLocation({timeout: 100});
     return location;
   };
